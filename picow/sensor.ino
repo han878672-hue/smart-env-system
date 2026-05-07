@@ -1,7 +1,7 @@
 #include <DHT.h>
 
 // ===== 腳位 =====
-#define DHTPIN 2
+#define DHTPIN 4
 #define DHTTYPE DHT11
 #define MQ135_PIN A0
 #define UART_TX 0
@@ -23,11 +23,13 @@ void task_readDHT(unsigned long now) {
   if (now - t_dht >= 2000) {
     t_dht = now;
 
-    int t = dht.readTemperature();
-    int h = dht.readHumidity();
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
 
     if (!isnan(t)) g_temp = (int)t;
+    else Serial.println("溫度讀取失敗");
     if (!isnan(h)) g_hum = (int)h;
+    else Serial.println("濕度讀取失敗");
   }
 }
 
@@ -46,7 +48,8 @@ void task_print(unsigned long now) {
 
   if (now - t >= 2000) {
     t = now;
-    
+
+    //====== 環境資料 ======
     Serial.print("溫度: ");
     Serial.print(g_temp);
     Serial.println(" °C");
@@ -57,16 +60,6 @@ void task_print(unsigned long now) {
 
     Serial.print("空氣品質(ADC): ");
     Serial.println(g_air);
-
-    // 簡單判斷
-    /*if (g_air < 300) {
-      Serial.println("空氣: 良好");
-    } else if (g_air < 600) {
-      Serial.println("空氣: 普通");
-    } else {
-      Serial.println("空氣: 很差");
-    }*/
-
     Serial.println();
 
     //====== RPi讀取 ======
@@ -78,19 +71,16 @@ void task_print(unsigned long now) {
     Serial1.print(g_air);
     Serial1.print(">\n");
 
-    //Serial1.println();
   }
 }
 
 
 
 // ===== 主程式 =====
-
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
   dht.begin();
-
 }
 
 void loop() {
